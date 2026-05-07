@@ -41,9 +41,6 @@ export default function Dashboard() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Força a sincronização com o ThingSpeak (Útil para rodar localmente onde o Cron da Vercel não atua)
-      await fetch('/api/sync');
-
       // Fetch latest 24 hours (or based on filter, for now let's just fetch latest 100 for charts)
       const { data, error } = await supabase
         .from('dados_estacao')
