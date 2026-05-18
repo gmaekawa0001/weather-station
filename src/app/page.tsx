@@ -45,8 +45,34 @@ export default function Dashboard() {
   const [lastUpdate, setLastUpdate] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(false);
 
+  const [sunriseTime, setSunriseTime] = useState("--:--");
+  const [sunsetTime, setSunsetTime] = useState("--:--");
+
   const [zoomDomain, setZoomDomain] = useState<[number, number] | null>(null);
   const chartContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchSunTimes = async () => {
+      try {
+        // Coordenadas aproximadas da E.M. Pe. Tomaz Ghirardelli (Campo Grande, MS)
+        const lat = -20.53;
+        const lng = -54.61;
+        const res = await fetch(`https://api.sunrise-sunset.org/json?lat=${lat}&lng=${lng}&formatted=0`);
+        const data = await res.json();
+        
+        if (data.status === "OK") {
+          const sunrise = new Date(data.results.sunrise);
+          const sunset = new Date(data.results.sunset);
+          
+          setSunriseTime(sunrise.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+          setSunsetTime(sunset.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+        }
+      } catch (err) {
+        console.error("Erro ao buscar dados do sol:", err);
+      }
+    };
+    fetchSunTimes();
+  }, []);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -299,8 +325,8 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto space-y-6">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
           <div className="flex items-center space-x-4 mb-4 md:mb-0">
-            <div className="bg-blue-600 p-2 rounded-lg">
-              <Thermometer className="text-white w-8 h-8" />
+            <div className="flex-shrink-0 bg-white p-1 rounded-lg">
+              <img src="/logo-ifmaker.png" alt="IF MAKER" className="h-10 md:h-14 w-auto object-contain" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Estação Meteorológica</h1>
@@ -308,6 +334,17 @@ export default function Dashboard() {
                 <MapPin className="w-4 h-4 mr-1" />
                 <span>E.M. Pe. Tomaz Ghirardelli</span>
               </div>
+              <details className="mt-3 text-xs text-slate-500 dark:text-slate-400 group">
+                <summary className="cursor-pointer font-medium hover:text-slate-700 dark:hover:text-slate-300 select-none flex items-center">
+                  Sobre o Projeto
+                </summary>
+                <div className="mt-2 space-y-1 pl-3 border-l-2 border-slate-200 dark:border-slate-700 pb-2">
+                  <p>Desenvolvido pela turma 1711 de Tecnologia em sistemas para internet do IFMS campus Campo Grande</p>
+                  <p><strong>Coordenador do Projeto:</strong> Leonardo Lachi Manetti</p>
+                  <p><strong>Professores Orientadores:</strong> Jonathas Leontino Medina, Eder de Souza Rodrigues</p>
+                  <p><strong>Estudantes:</strong> Gabriel Hideki Maekawa, Luís César Ramires Bezerra, Fillipe Coppes Furtado, Isaque Melo de Paula, João Pedro Fachineli Brito, Pedro Henrique Pereira de Matos, Marcos da Rosa Sotomaior, Vitor Hugo Ferreira Menoni</p>
+                </div>
+              </details>
             </div>
           </div>
           
@@ -421,7 +458,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-slate-500 dark:text-slate-400 text-xs font-medium">Nascer do Sol</h3>
-                <div className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-1">06:24</div>
+                <div className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-1">{sunriseTime}</div>
               </div>
               <Sunrise className="w-8 h-8 text-orange-400" />
             </div>
@@ -429,7 +466,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-slate-500 dark:text-slate-400 text-xs font-medium">Pôr do Sol</h3>
-                <div className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-1">18:42</div>
+                <div className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-1">{sunsetTime}</div>
               </div>
               <Sunset className="w-8 h-8 text-orange-500" />
             </div>
