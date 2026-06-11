@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
-    const CHANNEL_ID = '3147539';
+    const CHANNEL_ID = '3022874';
     const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?results=1`;
 
     const response = await fetch(url, { cache: 'no-store' });
