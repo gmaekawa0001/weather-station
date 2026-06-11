@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
-    const CHANNEL_ID = '3022874';
+    const CHANNEL_ID = process.env.THINGSPEAK_CHANNEL_ID || '3147539';
     const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?results=1`;
 
     const response = await fetch(url, { cache: 'no-store' });
@@ -15,6 +15,12 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: 'Nenhum dado retornado do ThingSpeak.' }, { status: 404 });
     }
 
+    const parseField = (val: any) => {
+      if (val === undefined || val === null || val === '') return null;
+      const parsed = parseFloat(val);
+      return isNaN(parsed) ? null : parsed;
+    };
+
     const feed = json.feeds[0];
     const novoId = feed.entry_id;
 
@@ -23,13 +29,13 @@ export async function GET(request: Request) {
     const payload = {
       entry_id: novoId,
       data_hora: feed.created_at,
-      temperatura_c: feed.field1 ? parseFloat(feed.field1) : null,
-      umidade_pct: feed.field2 ? parseFloat(feed.field2) : null,
-      pressao_hpa: feed.field3 ? parseFloat(feed.field3) : null,
-      gas_mq135: feed.field4 ? parseFloat(feed.field4) : null,
-      gas_mq02: feed.field5 ? parseFloat(feed.field5) : null,
-      chuva_diaria_mm: feed.field6 ? parseFloat(feed.field6) : null,
-      memoria: feed.field7 ? parseFloat(feed.field7) : null,
+      temperatura_c: parseField(feed.field1),
+      umidade_pct: parseField(feed.field2),
+      pressao_hpa: parseField(feed.field3),
+      gas_mq135: parseField(feed.field4),
+      gas_mq02: parseField(feed.field5),
+      chuva_diaria_mm: parseField(feed.field6),
+      memoria: parseField(feed.field7),
     };
 
     const { data, error } = await supabase
