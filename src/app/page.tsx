@@ -64,8 +64,8 @@ export default function Dashboard() {
           const sunrise = new Date(data.results.sunrise);
           const sunset = new Date(data.results.sunset);
           
-          setSunriseTime(sunrise.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
-          setSunsetTime(sunset.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+          setSunriseTime(sunrise.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Campo_Grande' }));
+          setSunsetTime(sunset.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Campo_Grande' }));
         }
       } catch (err) {
         console.error("Erro ao buscar dados do sol:", err);
