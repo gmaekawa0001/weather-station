@@ -94,7 +94,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anonima-jwt
 # Chave Admin para inserções seguras na rota de sincronização
 SUPABASE_SERVICE_ROLE_KEY=sua-chave-service-role
 
-# Identificador do Canal do ThingSpeak (Opcional - Valor Padrão: 3147539)
+# Identificador do Canal do ThingSpeak (Valor Padrão: 3147539)
 THINGSPEAK_CHANNEL_ID=seu-id-de-canal
 ```
 
@@ -125,7 +125,7 @@ alter publication supabase_realtime add table public.dados_estacao;
 
 1.  **Clone o repositório:**
     ```bash
-    git clone <url-do-repositorio>
+    git clone https://github.com/gmaekawa0001/weather-station.git
     cd weather-station
     ```
 
