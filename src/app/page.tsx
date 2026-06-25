@@ -23,10 +23,27 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
   ResponsiveContainer,
   Brush,
 } from "recharts";
 import { supabase } from "@/lib/supabase";
+import {
+  MQ135_THRESHOLDS,
+  MQ02_THRESHOLDS,
+  LEVEL_STYLES,
+  getAirQualityLevel,
+  getWorstLevel,
+  getGasDisplayLabel,
+  getGasChartTitle,
+} from "@/lib/airQuality";
+import { GasChartReferences } from "@/components/GasChartReferences";
+import {
+  GasQualityBadge,
+  getGasCardBorderClass,
+  getGasIconClass,
+} from "@/components/GasQualityBadge";
+import { createGasTooltip } from "@/components/GasTooltip";
 
 export default function Dashboard() {
   const [activeFilter, setActiveFilter] = useState("24h");
@@ -359,6 +376,10 @@ export default function Dashboard() {
     }
   }, [handleWheel]);
 
+  const mq135Level = getAirQualityLevel(currentData?.gas_mq135, MQ135_THRESHOLDS);
+  const mq02Level = getAirQualityLevel(currentData?.gas_mq02, MQ02_THRESHOLDS);
+  const overallAirLevel = getWorstLevel(mq135Level, mq02Level);
+
   useEffect(() => {
     const channel = supabase
       .channel('schema-db-changes')
@@ -429,6 +450,29 @@ export default function Dashboard() {
 
         <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 pt-2">Condições Atuais</h2>
 
+        {overallAirLevel && (
+          <div
+            className={`flex items-center gap-3 p-4 rounded-xl border-l-4 ${LEVEL_STYLES[overallAirLevel].border} bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm`}
+          >
+            <div className={`p-2 rounded-full text-white ${LEVEL_STYLES[overallAirLevel].icon}`}>
+              <Cloud className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Qualidade do Ar
+              </p>
+              <p className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                {LEVEL_STYLES[overallAirLevel].label}
+              </p>
+            </div>
+            <div className="ml-auto hidden sm:flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> Bom</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> Moderado</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-red-500" /> Perigoso</span>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-4">
@@ -472,15 +516,21 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between hover:shadow-md transition-shadow">
+          <div className={`bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 border-l-4 ${getGasCardBorderClass(currentData?.gas_mq135, MQ135_THRESHOLDS)} flex flex-col justify-between hover:shadow-md transition-shadow`}>
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">Gás Poluente (MQ135)</h3>
+                <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">
+                  {getGasDisplayLabel(MQ135_THRESHOLDS)}
+                </h3>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                  {MQ135_THRESHOLDS.pollutant} · {MQ135_THRESHOLDS.sensor}
+                </p>
                 <div className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">
-                  {currentData?.gas_mq135 ?? '--'}<span className="text-xl font-normal text-slate-500 dark:text-slate-400"> ppm</span>
+                  {currentData?.gas_mq135 ?? '--'}<span className="text-xl font-normal text-slate-500 dark:text-slate-400"> {MQ135_THRESHOLDS.unit}</span>
                 </div>
+                <GasQualityBadge value={currentData?.gas_mq135} thresholds={MQ135_THRESHOLDS} />
               </div>
-              <div className="bg-blue-500 p-2 rounded-full text-white">
+              <div className={`${getGasIconClass(currentData?.gas_mq135, MQ135_THRESHOLDS, "bg-blue-500")} p-2 rounded-full text-white`}>
                 <Cloud className="w-6 h-6" />
               </div>
             </div>
@@ -488,14 +538,20 @@ export default function Dashboard() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-between hover:shadow-md transition-shadow">
+          <div className={`bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 border-l-4 ${getGasCardBorderClass(currentData?.gas_mq02, MQ02_THRESHOLDS)} flex items-center justify-between hover:shadow-md transition-shadow`}>
             <div>
-              <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">Gás Combustível (MQ02)</h3>
+              <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">
+                {getGasDisplayLabel(MQ02_THRESHOLDS)}
+              </h3>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                {MQ02_THRESHOLDS.pollutant} · {MQ02_THRESHOLDS.sensor}
+              </p>
               <div className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">
-                {currentData?.gas_mq02 ?? '--'}<span className="text-xl font-normal text-slate-500 dark:text-slate-400"> ppm</span>
+                {currentData?.gas_mq02 ?? '--'}<span className="text-xl font-normal text-slate-500 dark:text-slate-400"> {MQ02_THRESHOLDS.unit}</span>
               </div>
+              <GasQualityBadge value={currentData?.gas_mq02} thresholds={MQ02_THRESHOLDS} />
             </div>
-            <div className="bg-red-500 p-3 rounded-full text-white">
+            <div className={`${getGasIconClass(currentData?.gas_mq02, MQ02_THRESHOLDS, "bg-red-500")} p-3 rounded-full text-white`}>
               <AlertTriangle className="w-6 h-6" />
             </div>
           </div>
@@ -645,15 +701,42 @@ export default function Dashboard() {
             </div>
 
             <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-              <h3 className="text-slate-700 dark:text-slate-200 font-bold mb-4">Gás Poluente (MQ135) (ppm)</h3>
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <h3 className="text-slate-700 dark:text-slate-200 font-bold">
+                  {getGasChartTitle(MQ135_THRESHOLDS)}
+                </h3>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500">{MQ135_THRESHOLDS.reference}</p>
+              </div>
               <div className="h-72 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 20, left: 0 }}>
+                  <LineChart data={chartData} margin={{ top: 20, right: 30, bottom: 20, left: 10 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                     <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} domain={['auto', 'auto']} />
-                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                    <Line type="monotone" dataKey="gas135" stroke="#06b6d4" strokeWidth={2} dot={false} activeDot={{r: 6}} />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{fill: '#94a3b8', fontSize: 12}}
+                      domain={[0, (dataMax: number) => Math.max(dataMax ?? 0, MQ135_THRESHOLDS.moderadoMax * 1.15)]}
+                      label={{
+                        value: getGasDisplayLabel(MQ135_THRESHOLDS),
+                        angle: -90,
+                        position: "insideLeft",
+                        fill: "#94a3b8",
+                        fontSize: 11,
+                      }}
+                    />
+                    <GasChartReferences thresholds={MQ135_THRESHOLDS} />
+                    <Tooltip content={createGasTooltip(MQ135_THRESHOLDS)} />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="gas135"
+                      name={getGasDisplayLabel(MQ135_THRESHOLDS)}
+                      stroke="#06b6d4"
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{r: 6}}
+                    />
                     {chartData.length > 1 && <Brush dataKey="time" height={30} stroke="#06b6d4" fill="transparent" startIndex={brushIndices.startIndex} endIndex={brushIndices.endIndex} onChange={handleBrushChange} />}
                   </LineChart>
                 </ResponsiveContainer>
@@ -661,15 +744,42 @@ export default function Dashboard() {
             </div>
 
             <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-              <h3 className="text-slate-700 dark:text-slate-200 font-bold mb-4">Gás Combustível (MQ02) (ppm)</h3>
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <h3 className="text-slate-700 dark:text-slate-200 font-bold">
+                  {getGasChartTitle(MQ02_THRESHOLDS)}
+                </h3>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500">{MQ02_THRESHOLDS.reference}</p>
+              </div>
               <div className="h-72 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 20, left: 0 }}>
+                  <LineChart data={chartData} margin={{ top: 20, right: 30, bottom: 20, left: 10 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                     <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} domain={['auto', 'auto']} />
-                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                    <Line type="monotone" dataKey="gas02" stroke="#f97316" strokeWidth={2} dot={false} activeDot={{r: 6}} />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{fill: '#94a3b8', fontSize: 12}}
+                      domain={[0, (dataMax: number) => Math.max(dataMax ?? 0, MQ02_THRESHOLDS.moderadoMax * 1.15)]}
+                      label={{
+                        value: getGasDisplayLabel(MQ02_THRESHOLDS),
+                        angle: -90,
+                        position: "insideLeft",
+                        fill: "#94a3b8",
+                        fontSize: 11,
+                      }}
+                    />
+                    <GasChartReferences thresholds={MQ02_THRESHOLDS} />
+                    <Tooltip content={createGasTooltip(MQ02_THRESHOLDS)} />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="gas02"
+                      name={getGasDisplayLabel(MQ02_THRESHOLDS)}
+                      stroke="#f97316"
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{r: 6}}
+                    />
                     {chartData.length > 1 && <Brush dataKey="time" height={30} stroke="#f97316" fill="transparent" startIndex={brushIndices.startIndex} endIndex={brushIndices.endIndex} onChange={handleBrushChange} />}
                   </LineChart>
                 </ResponsiveContainer>
