@@ -74,13 +74,32 @@ export default function Dashboard() {
     fetchSunTimes();
   }, []);
 
+  const isDarkInitialized = useRef(false);
+
+  useEffect(() => {
+    const savedMode = localStorage.getItem("darkMode");
+    if (savedMode === "true") {
+      setIsDarkMode(true);
+    } else if (savedMode === "false") {
+      setIsDarkMode(false);
+    } else {
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      setIsDarkMode(prefersDark);
+    }
+    isDarkInitialized.current = true;
+  }, []);
+
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
+    if (isDarkInitialized.current) {
+      localStorage.setItem("darkMode", isDarkMode ? "true" : "false");
+    }
   }, [isDarkMode]);
+
 
   const fetchData = async () => {
     setLoading(true);
