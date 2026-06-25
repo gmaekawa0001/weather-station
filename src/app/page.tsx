@@ -475,7 +475,7 @@ export default function Dashboard() {
           <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">Gás (MQ135)</h3>
+                <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">Gás Poluente (MQ135)</h3>
                 <div className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">
                   {currentData?.gas_mq135 ?? '--'}<span className="text-xl font-normal text-slate-500 dark:text-slate-400"> ppm</span>
                 </div>
@@ -645,7 +645,7 @@ export default function Dashboard() {
             </div>
 
             <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-              <h3 className="text-slate-700 dark:text-slate-200 font-bold mb-4">Gás (MQ135) (ppm)</h3>
+              <h3 className="text-slate-700 dark:text-slate-200 font-bold mb-4">Gás Poluente (MQ135) (ppm)</h3>
               <div className="h-72 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 20, left: 0 }}>
