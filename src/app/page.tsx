@@ -110,28 +110,59 @@ export default function Dashboard() {
         endIso = new Date(`${customEndDate}T23:59:59`).toISOString();
       }
 
-      const spanMs = new Date(endIso).getTime() - new Date(startIso).getTime();
-      let dbInterval = "10 minutes";
-      if (spanMs > 30 * 24 * 3600 * 1000) dbInterval = "1 day";
-      else if (spanMs > 7 * 24 * 3600 * 1000) dbInterval = "1 hour";
-      else dbInterval = "10 minutes";
+      // Query exact count first from the table to plan pagination
+      const { count, error: countError } = await supabase
+        .from('dados_estacao')
+        .select('*', { count: 'exact', head: true })
+        .gte('data_hora', startIso)
+        .lte('data_hora', endIso);
 
-      const { data: rpcData, error: rpcError } = await supabase.rpc('buscar_medias_estacao', {
-        data_inicio: startIso,
-        data_fim: endIso,
-        intervalo: dbInterval
-      });
-
-      if (rpcError) {
-        console.error("RPC Error:", rpcError);
+      if (countError) {
+        console.error("Count Error:", countError);
         setBaseData([]);
-      } else if (rpcData && rpcData.length > 0) {
-        const formatted = rpcData.map((d: any) => ({
-          rawTime: new Date(d.tempo_agrupado).getTime(),
-          temp: d.temp_media,
-          humidity: d.umidade_media,
-          pressure: d.pressao_media,
-          rain: d.chuva_media,
+        setZoomDomain(null);
+        return;
+      }
+
+      const totalCount = count || 0;
+      const limit = 1000;
+      const rawData: any[] = [];
+      
+      // Batch parallel fetches (max 6 at a time to prevent browser limit blocks)
+      const batchSize = 6;
+      const offsets: number[] = [];
+      for (let offset = 0; offset < totalCount; offset += limit) {
+        offsets.push(offset);
+      }
+
+      for (let i = 0; i < offsets.length; i += batchSize) {
+        const batchOffsets = offsets.slice(i, i + batchSize);
+        const promises = batchOffsets.map(offset =>
+          supabase
+            .from('dados_estacao')
+            .select('data_hora, temperatura_c, umidade_pct, pressao_hpa, chuva_diaria_mm, gas_mq135, gas_mq02')
+            .gte('data_hora', startIso)
+            .lte('data_hora', endIso)
+            .order('data_hora', { ascending: true })
+            .range(offset, offset + limit - 1)
+        );
+        
+        const results = await Promise.all(promises);
+        for (const res of results) {
+          if (res.error) throw res.error;
+          if (res.data) rawData.push(...res.data);
+        }
+      }
+
+      if (rawData.length > 0) {
+        const formatted = rawData.map((d: any) => ({
+          rawTime: new Date(d.data_hora).getTime(),
+          temp: d.temperatura_c,
+          humidity: d.umidade_pct,
+          pressure: d.pressao_hpa,
+          rain: d.chuva_diaria_mm,
+          gas135: d.gas_mq135,
+          gas02: d.gas_mq02,
         })).sort((a: any, b: any) => a.rawTime - b.rawTime);
         
         setBaseData(formatted);
@@ -145,7 +176,9 @@ export default function Dashboard() {
         setZoomDomain(null);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Fetch Data Error:", err);
+      setBaseData([]);
+      setZoomDomain(null);
     } finally {
       setLoading(false);
     }
@@ -207,6 +240,8 @@ export default function Dashboard() {
           humSum: 0, humCount: 0,
           pressSum: 0, pressCount: 0,
           rainSum: 0, rainCount: 0,
+          gas135Sum: 0, gas135Count: 0,
+          gas02Sum: 0, gas02Count: 0,
         };
       }
       
@@ -214,6 +249,8 @@ export default function Dashboard() {
       if (d.humidity != null) { groups[key].humSum += Number(d.humidity); groups[key].humCount++; }
       if (d.pressure != null) { groups[key].pressSum += Number(d.pressure); groups[key].pressCount++; }
       if (d.rain != null) { groups[key].rainSum += Number(d.rain); groups[key].rainCount++; }
+      if (d.gas135 != null) { groups[key].gas135Sum += Number(d.gas135); groups[key].gas135Count++; }
+      if (d.gas02 != null) { groups[key].gas02Sum += Number(d.gas02); groups[key].gas02Count++; }
     });
 
     return Object.values(groups).map((g: any) => ({
@@ -223,6 +260,8 @@ export default function Dashboard() {
       humidity: g.humCount ? Number((g.humSum / g.humCount).toFixed(1)) : null,
       pressure: g.pressCount ? Number((g.pressSum / g.pressCount).toFixed(2)) : null,
       rain: g.rainCount ? Number((g.rainSum / g.rainCount).toFixed(2)) : null,
+      gas135: g.gas135Count ? Number((g.gas135Sum / g.gas135Count).toFixed(1)) : null,
+      gas02: g.gas02Count ? Number((g.gas02Sum / g.gas02Count).toFixed(1)) : null,
     })).sort((a: any, b: any) => a.rawTime - b.rawTime);
   }, [baseData, zoomDomain]);
 
@@ -419,7 +458,7 @@ export default function Dashboard() {
               <div>
                 <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">Gás (MQ135)</h3>
                 <div className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">
-                  {currentData?.gas_mq135 ?? '--'}
+                  {currentData?.gas_mq135 ?? '--'}<span className="text-xl font-normal text-slate-500 dark:text-slate-400"> ppm</span>
                 </div>
               </div>
               <div className="bg-blue-500 p-2 rounded-full text-white">
@@ -434,7 +473,7 @@ export default function Dashboard() {
             <div>
               <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">Gás Combustível (MQ02)</h3>
               <div className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">
-                {currentData?.gas_mq02 ?? '--'}
+                {currentData?.gas_mq02 ?? '--'}<span className="text-xl font-normal text-slate-500 dark:text-slate-400"> ppm</span>
               </div>
             </div>
             <div className="bg-red-500 p-3 rounded-full text-white">
@@ -581,6 +620,38 @@ export default function Dashboard() {
                     <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                     <Line type="monotone" dataKey="rain" stroke="#10b981" strokeWidth={2} dot={false} activeDot={{r: 6}} />
                     {chartData.length > 1 && <Brush dataKey="time" height={30} stroke="#10b981" fill="transparent" startIndex={brushIndices.startIndex} endIndex={brushIndices.endIndex} onChange={handleBrushChange} />}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+              <h3 className="text-slate-700 dark:text-slate-200 font-bold mb-4">Gás (MQ135) (ppm)</h3>
+              <div className="h-72 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 20, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} domain={['auto', 'auto']} />
+                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    <Line type="monotone" dataKey="gas135" stroke="#06b6d4" strokeWidth={2} dot={false} activeDot={{r: 6}} />
+                    {chartData.length > 1 && <Brush dataKey="time" height={30} stroke="#06b6d4" fill="transparent" startIndex={brushIndices.startIndex} endIndex={brushIndices.endIndex} onChange={handleBrushChange} />}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+              <h3 className="text-slate-700 dark:text-slate-200 font-bold mb-4">Gás Combustível (MQ02) (ppm)</h3>
+              <div className="h-72 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 20, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} domain={['auto', 'auto']} />
+                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    <Line type="monotone" dataKey="gas02" stroke="#f97316" strokeWidth={2} dot={false} activeDot={{r: 6}} />
+                    {chartData.length > 1 && <Brush dataKey="time" height={30} stroke="#f97316" fill="transparent" startIndex={brushIndices.startIndex} endIndex={brushIndices.endIndex} onChange={handleBrushChange} />}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
