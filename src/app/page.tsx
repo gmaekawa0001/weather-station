@@ -82,6 +82,7 @@ export default function Dashboard() {
   const [lastUpdate, setLastUpdate] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+  const [statusData, setStatusData] = useState<any>(null);
 
   const [sunriseTime, setSunriseTime] = useState("--:--");
   const [sunsetTime, setSunsetTime] = useState("--:--");
@@ -110,6 +111,24 @@ export default function Dashboard() {
       }
     };
     fetchSunTimes();
+  }, []);
+
+  const fetchStatus = async () => {
+    try {
+      const res = await fetch('/api/status');
+      const data = await res.json();
+      if (data && !data.error) {
+        setStatusData(data);
+      }
+    } catch (err) {
+      console.error("Erro ao buscar status da estacao:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 2 * 60 * 1000); // 2 minutos
+    return () => clearInterval(interval);
   }, []);
 
   const isDarkInitialized = useRef(false);
@@ -141,6 +160,7 @@ export default function Dashboard() {
 
   const fetchData = async () => {
     setLoading(true);
+    fetchStatus();
     try {
       const { data: latest } = await supabase
         .from('dados_estacao')
@@ -460,6 +480,27 @@ export default function Dashboard() {
             </button>
           </div>
         </header>
+
+        {statusData && (statusData.equipmentStatus === 'stuck' || statusData.syncStatus === 'stuck') && (
+          <div className="space-y-3">
+            {statusData.equipmentStatus === 'stuck' && (
+              <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 text-red-800 dark:text-red-300 p-4 rounded-xl flex items-center space-x-3 shadow-sm transition-all duration-300">
+                <AlertTriangle className="w-5 h-5 flex-shrink-0 text-red-500" />
+                <div className="text-sm">
+                  <strong>Equipamento Travado / Offline:</strong> A estação física (ThingSpeak) não está enviando novos dados há <strong>{statusData.diffTsMinutes} minutos</strong>. Verifique a alimentação ou conexão do hardware.
+                </div>
+              </div>
+            )}
+            {statusData.syncStatus === 'stuck' && statusData.equipmentStatus !== 'stuck' && (
+              <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-300 p-4 rounded-xl flex items-center space-x-3 shadow-sm transition-all duration-300">
+                <AlertTriangle className="w-5 h-5 flex-shrink-0 text-amber-500" />
+                <div className="text-sm">
+                  <strong>Falha na Sincronização:</strong> O equipamento está ativo no ThingSpeak, mas o banco de dados (Supabase) não está sendo atualizado há <strong>{statusData.diffDbMinutes} minutos</strong> (último dado no banco).
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 pt-2">Condições Atuais</h2>
 

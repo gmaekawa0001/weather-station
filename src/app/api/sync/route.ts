@@ -6,7 +6,8 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
   try {
     const CHANNEL_ID = process.env.THINGSPEAK_CHANNEL_ID || '3147539';
-    const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?results=1`;
+    // Buscamos os últimos 50 registros para evitar travamentos em dados intermediários
+    const url = `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds.json?results=50`;
 
     const response = await fetch(url, { cache: 'no-store' });
     const json = await response.json();
@@ -21,41 +22,41 @@ export async function GET(request: Request) {
       return isNaN(parsed) ? null : parsed;
     };
 
-    const feed = json.feeds[0];
-    const novoId = feed.entry_id;
+    let tempFilteredCount = 0;
+    let humFilteredCount = 0;
 
-    // Filtragem de dados inválidos de sensores
-    let temp = parseField(feed.field1);
-    let tempFiltered = false;
-    if (temp !== null && (temp >= 100 || temp < -10)) {
-      temp = null;
-      tempFiltered = true;
-    }
+    const payloads = json.feeds.map((feed: any) => {
+      // Filtragem de dados inválidos de sensores
+      let temp = parseField(feed.field1);
+      if (temp !== null && (temp >= 100 || temp < -10)) {
+        temp = null;
+        tempFilteredCount++;
+      }
 
-    let hum = parseField(feed.field2);
-    let humFiltered = false;
-    if (hum !== null && hum === 0) {
-      hum = null;
-      humFiltered = true;
-    }
+      let hum = parseField(feed.field2);
+      if (hum !== null && hum === 0) {
+        hum = null;
+        humFilteredCount++;
+      }
+
+      return {
+        entry_id: feed.entry_id,
+        data_hora: feed.created_at,
+        temperatura_c: temp,
+        umidade_pct: hum,
+        pressao_hpa: parseField(feed.field3),
+        gas_mq135: parseField(feed.field4),
+        gas_mq02: parseField(feed.field5),
+        chuva_diaria_mm: parseField(feed.field6),
+        memoria: parseField(feed.field7),
+      };
+    });
 
     const supabase = getServiceSupabase();
 
-    const payload = {
-      entry_id: novoId,
-      data_hora: feed.created_at,
-      temperatura_c: temp,
-      umidade_pct: hum,
-      pressao_hpa: parseField(feed.field3),
-      gas_mq135: parseField(feed.field4),
-      gas_mq02: parseField(feed.field5),
-      chuva_diaria_mm: parseField(feed.field6),
-      memoria: parseField(feed.field7),
-    };
-
     const { data, error } = await supabase
       .from('dados_estacao')
-      .upsert(payload, { onConflict: 'entry_id', ignoreDuplicates: true })
+      .upsert(payloads, { onConflict: 'entry_id', ignoreDuplicates: true })
       .select();
 
     if (error) {
@@ -63,23 +64,16 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    if (data && data.length === 0) {
-      return NextResponse.json({
-        message: `Dado repetido (ID ${novoId}). Nenhuma nova inserção.`,
-        filtered: {
-          temperatura: tempFiltered,
-          umidade: humFiltered
-        }
-      });
-    }
+    const insertedCount = data ? data.length : 0;
 
     return NextResponse.json({
-      message: `Novo registro salvo: ID ${novoId}`,
-      data,
-      filtered: {
-        temperatura: tempFiltered,
-        umidade: humFiltered
-      }
+      message: `${insertedCount} novos registros sincronizados com sucesso.`,
+      insertedCount,
+      filteredSummary: {
+        temperaturaDiscarded: tempFilteredCount,
+        umidadeDiscarded: humFilteredCount
+      },
+      data
     });
 
   } catch (error: any) {
