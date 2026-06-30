@@ -15,6 +15,7 @@ import {
   Calendar,
   Cloud,
   AlertTriangle,
+  Info,
 } from "lucide-react";
 import {
   LineChart,
@@ -80,6 +81,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
 
   const [sunriseTime, setSunriseTime] = useState("--:--");
   const [sunsetTime, setSunsetTime] = useState("--:--");
@@ -428,27 +430,13 @@ export default function Dashboard() {
                 <MapPin className="w-4 h-4 mr-1" />
                 <span>E.M. Pe. Tomaz Ghirardelli</span>
               </div>
-              <details className="mt-3 text-xs text-slate-500 dark:text-slate-400 group">
-                <summary className="cursor-pointer font-medium hover:text-slate-700 dark:hover:text-slate-300 select-none flex items-center">
-                  Sobre o Projeto
-                </summary>
-                <div className="mt-2 space-y-3 pl-3 border-l-2 border-slate-200 dark:border-slate-700 pb-2">
-                  <div className="space-y-1">
-                    <p className="font-semibold text-slate-700 dark:text-slate-300">Equipe de Software</p>
-                    <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">Desenvolvido pela turma 1711 de Tecnologia em sistemas para internet do IFMS campus Campo Grande</p>
-                    <p><strong>Coordenador do Projeto:</strong> Leonardo Lachi Manetti</p>
-                    <p><strong>Professores Orientadores:</strong> Jonathas Leontino Medina, Eder de Souza Rodrigues</p>
-                    <p><strong>Estudantes:</strong> Gabriel Hideki Maekawa, Luís César Ramires Bezerra, Fillipe Coppes Furtado, Isaque Melo de Paula, João Pedro Fachineli Brito, Pedro Henrique Pereira de Matos, Marcos da Rosa Sotomaior, Vitor Hugo Ferreira Menoni</p>
-                  </div>
-                  <div className="pt-2 border-t border-slate-200 dark:border-slate-700 space-y-1">
-                    <p className="font-semibold text-slate-700 dark:text-slate-300">Equipe de Hardware</p>
-                    <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">Responsável pelo desenvolvimento do hardware do projeto</p>
-                    <p><strong>Coordenador:</strong> Leonardo Lachi Manetti</p>
-                    <p><strong>Orientadores:</strong> Rodrigo Parreira de Oliveira Melo, Lilian Ribeiro da Silva e Ronaldo Conceição da Silva</p>
-                    <p><strong>Estudantes:</strong> Alvaro Vicente da Silva dias Aguirre, Rafaella Vieira Alexandre, João Vitor Correa Padilha</p>
-                  </div>
-                </div>
-              </details>
+              <button 
+                onClick={() => setIsAboutModalOpen(true)}
+                className="mt-3 text-xs text-blue-600 dark:text-blue-400 font-medium hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer select-none flex items-center space-x-1"
+              >
+                <Info className="w-3.5 h-3.5" />
+                <span>Sobre o Projeto</span>
+              </button>
             </div>
           </div>
           
@@ -728,6 +716,87 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Modal Sobre o Projeto */}
+      {isAboutModalOpen && (
+        <div 
+          onClick={() => setIsAboutModalOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 animate-fade-in"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 max-w-2xl w-full max-h-[90vh] overflow-y-auto flex flex-col transform transition-all scale-100 duration-300"
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-700">
+              <div className="flex items-center space-x-2">
+                <div className="bg-blue-50 dark:bg-blue-950/40 p-2 rounded-lg text-blue-600 dark:text-blue-400">
+                  <Info className="w-5 h-5" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Sobre o Projeto</h2>
+              </div>
+              <button 
+                onClick={() => setIsAboutModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer"
+              >
+                <span className="sr-only">Fechar</span>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              {/* Equipe Sistema */}
+              <div className="space-y-2">
+                <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                  <span>💻</span> Equipe responsável pelo desenvolvimento do sistema
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400 text-xs">
+                  Desenvolvido pela turma 1711 de Tecnologia em sistemas para internet do IFMS campus Campo Grande.
+                </p>
+                <div className="pl-3 border-l-2 border-slate-200 dark:border-slate-700 space-y-1.5 mt-2">
+                  <p><strong>Coordenador do Projeto:</strong> Leonardo Lachi Manetti</p>
+                  <p><strong>Professores Orientadores:</strong> Jonathas Leontino Medina, Eder de Souza Rodrigues</p>
+                  <p className="text-xs leading-relaxed">
+                    <strong>Estudantes:</strong> Gabriel Hideki Maekawa, Luís César Ramires Bezerra, Fillipe Coppes Furtado, Isaque Melo de Paula, João Pedro Fachineli Brito, Pedro Henrique Pereira de Matos, Marcos da Rosa Sotomaior, Vitor Hugo Ferreira Menoni
+                  </p>
+                </div>
+              </div>
+
+              <div className="h-px bg-slate-100 dark:bg-slate-700" />
+
+              {/* Equipe Hardware */}
+              <div className="space-y-2">
+                <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                  <span>🔌</span> Equipe responsável pelo desenvolvimento do hardware
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400 text-xs">
+                  Responsável pela montagem física, integração dos sensores e telemetria da estação.
+                </p>
+                <div className="pl-3 border-l-2 border-slate-200 dark:border-slate-700 space-y-1.5 mt-2">
+                  <p><strong>Coordenador:</strong> Leonardo Lachi Manetti</p>
+                  <p><strong>Orientadores:</strong> Rodrigo Parreira de Oliveira Melo, Lilian Ribeiro da Silva e Ronaldo Conceição da Silva</p>
+                  <p className="text-xs leading-relaxed">
+                    <strong>Estudantes:</strong> Alvaro Vicente da Silva dias Aguirre, Rafaella Vieira Alexandre, João Vitor Correa Padilha
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700 flex justify-end rounded-b-2xl">
+              <button
+                onClick={() => setIsAboutModalOpen(false)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-colors shadow-sm cursor-pointer"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
