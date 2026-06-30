@@ -464,6 +464,7 @@ export default function Dashboard() {
         <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 pt-2">Condições Atuais</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Primeira Linha (Colunas 1, 2, 3) */}
           <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-4">
               <div>
@@ -495,20 +496,6 @@ export default function Dashboard() {
           <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">Pressão Atmosférica</h3>
-                <div className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">
-                  {currentData?.pressao_hpa != null ? Number(currentData.pressao_hpa).toFixed(2) : '--'}<span className="text-xl font-normal text-slate-500 dark:text-slate-400"> hPa</span>
-                </div>
-              </div>
-              <div className="bg-emerald-500 p-2 rounded-full text-white">
-                <Gauge className="w-6 h-6" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start mb-4">
-              <div>
                 <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">Gás Poluente (MQ135)</h3>
                 <div className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">
                   {currentData?.gas_mq135 ?? '--'}<span className="text-xl font-normal text-slate-500 dark:text-slate-400"> ppm</span>
@@ -524,18 +511,38 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-between hover:shadow-md transition-shadow">
-            <div>
-              <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">Gás Combustível (MQ02)</h3>
-              <div className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">
-                {currentData?.gas_mq02 ?? '--'}<span className="text-xl font-normal text-slate-500 dark:text-slate-400"> ppm</span>
+          {/* Coluna 4 - Ocupa 2 Linhas */}
+          <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-center space-y-4 hover:shadow-md transition-shadow lg:row-span-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-slate-500 dark:text-slate-400 text-xs font-medium">Nascer do Sol</h3>
+                <div className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-1">{sunriseTime}</div>
               </div>
+              <Sunrise className="w-8 h-8 text-orange-400" />
             </div>
-            <div className="bg-red-500 p-3 rounded-full text-white">
-              <AlertTriangle className="w-6 h-6" />
+            <div className="h-px bg-slate-100 dark:bg-slate-900 w-full" />
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-slate-500 dark:text-slate-400 text-xs font-medium">Pôr do Sol</h3>
+                <div className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-1">{sunsetTime}</div>
+              </div>
+              <Sunset className="w-8 h-8 text-orange-500" />
+            </div>
+          </div>
+
+          {/* Segunda Linha (Colunas 1, 2, 3) */}
+          <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-between hover:shadow-md transition-shadow">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">Pressão Atmosférica</h3>
+                <div className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">
+                  {currentData?.pressao_hpa != null ? Number(currentData.pressao_hpa).toFixed(2) : '--'}<span className="text-xl font-normal text-slate-500 dark:text-slate-400"> hPa</span>
+                </div>
+              </div>
+              <div className="bg-emerald-500 p-2 rounded-full text-white">
+                <Gauge className="w-6 h-6" />
+              </div>
             </div>
           </div>
 
@@ -551,21 +558,15 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-center space-y-4 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-slate-500 dark:text-slate-400 text-xs font-medium">Nascer do Sol</h3>
-                <div className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-1">{sunriseTime}</div>
+          <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-between hover:shadow-md transition-shadow">
+            <div>
+              <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">Gás Combustível (MQ02)</h3>
+              <div className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">
+                {currentData?.gas_mq02 ?? '--'}<span className="text-xl font-normal text-slate-500 dark:text-slate-400"> ppm</span>
               </div>
-              <Sunrise className="w-8 h-8 text-orange-400" />
             </div>
-            <div className="h-px bg-slate-100 dark:bg-slate-900 w-full" />
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-slate-500 dark:text-slate-400 text-xs font-medium">Pôr do Sol</h3>
-                <div className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-1">{sunsetTime}</div>
-              </div>
-              <Sunset className="w-8 h-8 text-orange-500" />
+            <div className="bg-red-500 p-3 rounded-full text-white">
+              <AlertTriangle className="w-6 h-6" />
             </div>
           </div>
         </div>
