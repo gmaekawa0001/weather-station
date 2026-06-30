@@ -24,13 +24,28 @@ export async function GET(request: Request) {
     const feed = json.feeds[0];
     const novoId = feed.entry_id;
 
+    // Filtragem de dados inválidos de sensores
+    let temp = parseField(feed.field1);
+    let tempFiltered = false;
+    if (temp !== null && (temp >= 100 || temp < -10)) {
+      temp = null;
+      tempFiltered = true;
+    }
+
+    let hum = parseField(feed.field2);
+    let humFiltered = false;
+    if (hum !== null && hum === 0) {
+      hum = null;
+      humFiltered = true;
+    }
+
     const supabase = getServiceSupabase();
 
     const payload = {
       entry_id: novoId,
       data_hora: feed.created_at,
-      temperatura_c: parseField(feed.field1),
-      umidade_pct: parseField(feed.field2),
+      temperatura_c: temp,
+      umidade_pct: hum,
       pressao_hpa: parseField(feed.field3),
       gas_mq135: parseField(feed.field4),
       gas_mq02: parseField(feed.field5),
@@ -49,10 +64,23 @@ export async function GET(request: Request) {
     }
 
     if (data && data.length === 0) {
-      return NextResponse.json({ message: `Dado repetido (ID ${novoId}). Nenhuma nova inserção.` });
+      return NextResponse.json({
+        message: `Dado repetido (ID ${novoId}). Nenhuma nova inserção.`,
+        filtered: {
+          temperatura: tempFiltered,
+          umidade: humFiltered
+        }
+      });
     }
 
-    return NextResponse.json({ message: `Novo registro salvo: ID ${novoId}`, data });
+    return NextResponse.json({
+      message: `Novo registro salvo: ID ${novoId}`,
+      data,
+      filtered: {
+        temperatura: tempFiltered,
+        umidade: humFiltered
+      }
+    });
 
   } catch (error: any) {
     console.error('API Sync Error:', error);

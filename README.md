@@ -6,7 +6,10 @@ Este é o repositório da aplicação web para a **Estação Meteorológica** in
 
 ## 👥 Sobre o Projeto e Equipe
 
-O projeto foi inteiramente idealizado e desenvolvido pela turma **1711** do curso de **Tecnologia em Sistemas para Internet** do **IFMS (Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul) - Campus Campo Grande**.
+O projeto foi dividido em duas frentes de desenvolvimento: a equipe de software e a equipe de hardware.
+
+### 💻 Equipe de Software
+A aplicação web e a integração do banco de dados foram idealizadas e desenvolvidas pela turma **1711** do curso de **Tecnologia em Sistemas para Internet** do **IFMS (Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul) - Campus Campo Grande**.
 
 *   **Coordenador do Projeto:**
     *   Leonardo Lachi Manetti
@@ -22,6 +25,20 @@ O projeto foi inteiramente idealizado e desenvolvido pela turma **1711** do curs
     *   Pedro Henrique Pereira de Matos
     *   Marcos da Rosa Sotomaior
     *   Vitor Hugo Ferreira Menoni
+
+### 🔌 Equipe de Hardware
+A equipe responsável pelo desenvolvimento do hardware do projeto (sensores, placas e eletrônica) é composta por:
+
+*   **Coordenador:**
+    *   Leonardo Lachi Manetti
+*   **Orientadores:**
+    *   Rodrigo Parreira de Oliveira Melo
+    *   Lilian Ribeiro da Silva
+    *   Ronaldo Conceição da Silva
+*   **Estudantes:**
+    *   Alvaro Vicente da Silva dias Aguirre
+    *   Rafaella Vieira Alexandre
+    *   João Vitor Correa Padilha
 
 ---
 

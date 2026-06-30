@@ -24,9 +24,45 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Brush,
 } from "recharts";
 import { supabase } from "@/lib/supabase";
+
+const getAirStatus = (val: number | null | undefined) => {
+  if (val === null || val === undefined) {
+    return {
+      label: "Sem dados",
+      bgClass: "bg-slate-100 text-slate-600 dark:bg-slate-700/50 dark:text-slate-400 border border-slate-200 dark:border-slate-700",
+      iconBg: "bg-blue-500"
+    };
+  }
+  const num = Number(val);
+  if (num <= 1000) {
+    return {
+      label: "Ar Limpo",
+      bgClass: "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50",
+      iconBg: "bg-blue-500"
+    };
+  }
+  if (num <= 1800) {
+    return {
+      label: "Moderado",
+      bgClass: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50",
+      iconBg: "bg-emerald-500"
+    };
+  }
+  if (num <= 2600) {
+    return {
+      label: "Alerta",
+      bgClass: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50",
+      iconBg: "bg-amber-500"
+    };
+  }
+  return {
+    label: "Crítico",
+    bgClass: "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-800/50",
+    iconBg: "bg-red-500"
+  };
+};
 
 export default function Dashboard() {
   const [activeFilter, setActiveFilter] = useState("24h");
@@ -396,11 +432,21 @@ export default function Dashboard() {
                 <summary className="cursor-pointer font-medium hover:text-slate-700 dark:hover:text-slate-300 select-none flex items-center">
                   Sobre o Projeto
                 </summary>
-                <div className="mt-2 space-y-1 pl-3 border-l-2 border-slate-200 dark:border-slate-700 pb-2">
-                  <p>Desenvolvido pela turma 1711 de Tecnologia em sistemas para internet do IFMS campus Campo Grande</p>
-                  <p><strong>Coordenador do Projeto:</strong> Leonardo Lachi Manetti</p>
-                  <p><strong>Professores Orientadores:</strong> Jonathas Leontino Medina, Eder de Souza Rodrigues</p>
-                  <p><strong>Estudantes:</strong> Gabriel Hideki Maekawa, Luís César Ramires Bezerra, Fillipe Coppes Furtado, Isaque Melo de Paula, João Pedro Fachineli Brito, Pedro Henrique Pereira de Matos, Marcos da Rosa Sotomaior, Vitor Hugo Ferreira Menoni</p>
+                <div className="mt-2 space-y-3 pl-3 border-l-2 border-slate-200 dark:border-slate-700 pb-2">
+                  <div className="space-y-1">
+                    <p className="font-semibold text-slate-700 dark:text-slate-300">Equipe de Software</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">Desenvolvido pela turma 1711 de Tecnologia em sistemas para internet do IFMS campus Campo Grande</p>
+                    <p><strong>Coordenador do Projeto:</strong> Leonardo Lachi Manetti</p>
+                    <p><strong>Professores Orientadores:</strong> Jonathas Leontino Medina, Eder de Souza Rodrigues</p>
+                    <p><strong>Estudantes:</strong> Gabriel Hideki Maekawa, Luís César Ramires Bezerra, Fillipe Coppes Furtado, Isaque Melo de Paula, João Pedro Fachineli Brito, Pedro Henrique Pereira de Matos, Marcos da Rosa Sotomaior, Vitor Hugo Ferreira Menoni</p>
+                  </div>
+                  <div className="pt-2 border-t border-slate-200 dark:border-slate-700 space-y-1">
+                    <p className="font-semibold text-slate-700 dark:text-slate-300">Equipe de Hardware</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">Responsável pelo desenvolvimento do hardware do projeto</p>
+                    <p><strong>Coordenador:</strong> Leonardo Lachi Manetti</p>
+                    <p><strong>Orientadores:</strong> Rodrigo Parreira de Oliveira Melo, Lilian Ribeiro da Silva e Ronaldo Conceição da Silva</p>
+                    <p><strong>Estudantes:</strong> Alvaro Vicente da Silva dias Aguirre, Rafaella Vieira Alexandre, João Vitor Correa Padilha</p>
+                  </div>
                 </div>
               </details>
             </div>
@@ -479,8 +525,13 @@ export default function Dashboard() {
                 <div className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">
                   {currentData?.gas_mq135 ?? '--'}<span className="text-xl font-normal text-slate-500 dark:text-slate-400"> ppm</span>
                 </div>
+                {currentData?.gas_mq135 != null && (
+                  <div className={`mt-2 px-2.5 py-0.5 rounded-full text-xs font-semibold inline-block transition-all duration-300 ${getAirStatus(currentData.gas_mq135).bgClass}`}>
+                    {getAirStatus(currentData.gas_mq135).label}
+                  </div>
+                )}
               </div>
-              <div className="bg-blue-500 p-2 rounded-full text-white">
+              <div className={`p-2 rounded-full text-white transition-all duration-300 ${getAirStatus(currentData?.gas_mq135).iconBg}`}>
                 <Cloud className="w-6 h-6" />
               </div>
             </div>
@@ -590,7 +641,6 @@ export default function Dashboard() {
                     <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} domain={['auto', 'auto']} />
                     <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                     <Line type="monotone" dataKey="temp" stroke="#ef4444" strokeWidth={2} dot={false} activeDot={{r: 6}} />
-                    {chartData.length > 1 && <Brush dataKey="time" height={30} stroke="#ef4444" fill="transparent" startIndex={brushIndices.startIndex} endIndex={brushIndices.endIndex} onChange={handleBrushChange} />}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -606,7 +656,6 @@ export default function Dashboard() {
                     <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} domain={['auto', 'auto']} />
                     <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                     <Line type="monotone" dataKey="humidity" stroke="#3b82f6" strokeWidth={2} dot={false} activeDot={{r: 6}} />
-                    {chartData.length > 1 && <Brush dataKey="time" height={30} stroke="#3b82f6" fill="transparent" startIndex={brushIndices.startIndex} endIndex={brushIndices.endIndex} onChange={handleBrushChange} />}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -622,7 +671,6 @@ export default function Dashboard() {
                     <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} domain={['auto', 'auto']} />
                     <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                     <Line type="monotone" dataKey="pressure" stroke="#8b5cf6" strokeWidth={2} dot={false} activeDot={{r: 6}} />
-                    {chartData.length > 1 && <Brush dataKey="time" height={30} stroke="#8b5cf6" fill="transparent" startIndex={brushIndices.startIndex} endIndex={brushIndices.endIndex} onChange={handleBrushChange} />}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -638,7 +686,6 @@ export default function Dashboard() {
                     <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} domain={['auto', 'auto']} />
                     <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                     <Line type="monotone" dataKey="rain" stroke="#10b981" strokeWidth={2} dot={false} activeDot={{r: 6}} />
-                    {chartData.length > 1 && <Brush dataKey="time" height={30} stroke="#10b981" fill="transparent" startIndex={brushIndices.startIndex} endIndex={brushIndices.endIndex} onChange={handleBrushChange} />}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -654,7 +701,6 @@ export default function Dashboard() {
                     <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} domain={['auto', 'auto']} />
                     <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                     <Line type="monotone" dataKey="gas135" stroke="#06b6d4" strokeWidth={2} dot={false} activeDot={{r: 6}} />
-                    {chartData.length > 1 && <Brush dataKey="time" height={30} stroke="#06b6d4" fill="transparent" startIndex={brushIndices.startIndex} endIndex={brushIndices.endIndex} onChange={handleBrushChange} />}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -670,7 +716,6 @@ export default function Dashboard() {
                     <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} domain={['auto', 'auto']} />
                     <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                     <Line type="monotone" dataKey="gas02" stroke="#f97316" strokeWidth={2} dot={false} activeDot={{r: 6}} />
-                    {chartData.length > 1 && <Brush dataKey="time" height={30} stroke="#f97316" fill="transparent" startIndex={brushIndices.startIndex} endIndex={brushIndices.endIndex} onChange={handleBrushChange} />}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
