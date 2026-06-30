@@ -538,14 +538,16 @@ export default function Dashboard() {
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium">Gás Poluente (MQ135)</h3>
-                <div className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">
-                  {currentData?.gas_mq135 ?? '--'}<span className="text-xl font-normal text-slate-500 dark:text-slate-400"> ppm</span>
-                </div>
-                {currentData?.gas_mq135 != null && (
-                  <div className={`mt-2 px-2.5 py-0.5 rounded-full text-xs font-semibold inline-block transition-all duration-300 ${getAirStatus(currentData.gas_mq135).bgClass}`}>
-                    {getAirStatus(currentData.gas_mq135).label}
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="text-3xl font-bold text-slate-800 dark:text-slate-100">
+                    {currentData?.gas_mq135 ?? '--'}<span className="text-xl font-normal text-slate-500 dark:text-slate-400"> ppm</span>
                   </div>
-                )}
+                  {currentData?.gas_mq135 != null && (
+                    <div className={`px-2.5 py-0.5 rounded-full text-xs font-semibold transition-all duration-300 ${getAirStatus(currentData.gas_mq135).bgClass}`}>
+                      {getAirStatus(currentData.gas_mq135).label}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className={`p-2 rounded-full text-white transition-all duration-300 ${getAirStatus(currentData?.gas_mq135).iconBg}`}>
                 <Cloud className="w-6 h-6" />
@@ -554,21 +556,21 @@ export default function Dashboard() {
           </div>
 
           {/* Coluna 4 - Ocupa 2 Linhas */}
-          <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-center space-y-4 hover:shadow-md transition-shadow lg:row-span-2">
-            <div className="flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col justify-center space-y-6 lg:space-y-0 lg:justify-evenly hover:shadow-md transition-shadow lg:row-span-2">
+            <div className="flex items-center justify-between w-full">
               <div>
-                <h3 className="text-slate-500 dark:text-slate-400 text-xs font-medium">Nascer do Sol</h3>
-                <div className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-1">{sunriseTime}</div>
+                <h3 className="text-slate-500 dark:text-slate-400 text-xs lg:text-sm font-medium">Nascer do Sol</h3>
+                <div className="text-xl lg:text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{sunriseTime}</div>
               </div>
-              <Sunrise className="w-8 h-8 text-orange-400" />
+              <Sunrise className="w-8 h-8 lg:w-9 lg:h-9 text-orange-400" />
             </div>
             <div className="h-px bg-slate-100 dark:bg-slate-900 w-full" />
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between w-full">
               <div>
-                <h3 className="text-slate-500 dark:text-slate-400 text-xs font-medium">Pôr do Sol</h3>
-                <div className="text-xl font-bold text-slate-800 dark:text-slate-100 mt-1">{sunsetTime}</div>
+                <h3 className="text-slate-500 dark:text-slate-400 text-xs lg:text-sm font-medium">Pôr do Sol</h3>
+                <div className="text-xl lg:text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{sunsetTime}</div>
               </div>
-              <Sunset className="w-8 h-8 text-orange-500" />
+              <Sunset className="w-8 h-8 lg:w-9 lg:h-9 text-orange-500" />
             </div>
           </div>
 
